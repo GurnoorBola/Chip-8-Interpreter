@@ -1,0 +1,13 @@
+cmake_minimum_required(VERSION 3.16)
+project(chip8 LANGUAGES CXX C)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+file(GLOB SOURCES src/*.cpp src/*.c)
+add_executable(chip8 ${SOURCES})
+
+target_include_directories(chip8 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_link_directories(chip8 PRIVATE ${CMAKE_SOURCE_DIR}/lib)
+
+target_link_libraries(chip8 PRIVATE glfw3dll opengl32)
