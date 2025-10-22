@@ -4,7 +4,7 @@ project(chip8 LANGUAGES CXX C)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-file(GLOB SOURCES src/*.cpp src/*.c)
+file(GLOB SOURCES vendor/*.c src/*.cpp src/*.c)
 add_executable(chip8 ${SOURCES})
 
 target_include_directories(chip8 PRIVATE ${CMAKE_SOURCE_DIR}/include)
