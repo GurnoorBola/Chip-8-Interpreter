@@ -58,5 +58,5 @@ public:
     
     void initDisplay();
 
-    int start();
+    void start();
 };

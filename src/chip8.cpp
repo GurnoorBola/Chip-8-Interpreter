@@ -150,7 +150,7 @@ void Chip8::initDisplay(){
     return;
 }
 
-int Chip8::start(){
+void Chip8::start(){
     while (!glfwWindowShouldClose(window)){
         processInput(window);
 
