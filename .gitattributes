@@ -1,0 +1,4 @@
+vendor/* linguist-vendored
+include/GLFW/* linguist-vendored
+include/glad/* linguist-vendored
+include/KHR/* linguist-vendored
