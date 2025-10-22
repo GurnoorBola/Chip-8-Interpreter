@@ -20,6 +20,8 @@ unsigned char fonts[] = {
     0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 };
 
+
+/*-----------------[Special Member Functions]-----------------*/
 Chip8::Chip8(){
     //copy fonts to memory (0x050 - 0x09F)
     memcpy(&memory[0x50], fonts, sizeof(fonts));
@@ -31,6 +33,35 @@ Chip8::Chip8(){
 
 };
 
+
+/*-----------------[Stack]-----------------*/
+void Chip8::push(unsigned short x){
+    if (top == MAX_STACK-1){
+        std::cerr << "Cannot push; Stack full" << std::endl;
+        return;
+    }
+    stack[++top] = x;
+}
+
+unsigned short Chip8::pop(){
+    if (top == -1) {
+        std::cerr << "Cannot pop; Stack empty" << std::endl;
+        return 0;
+    }
+    return stack[top--];
+}
+
+unsigned short Chip8::peek(){
+    if (top == -1) {
+        std::cerr << "Cannot peek; Stack empty" << std::endl;
+        return 0;
+    }
+    return stack[top];
+}
+
+
+
+/*-----------------[Graphics]-----------------*/
 void Chip8::framebuffer_size_callback(GLFWwindow* window, int width, int height){
     glViewport(0, 0, WIDTH*20, HEIGHT*20);
 }
@@ -41,7 +72,7 @@ void Chip8::processInput(GLFWwindow *window){
     }
 }
 
-int Chip8::initDisplay(){
+void Chip8::initDisplay(){
     glfwInit();
     glfwWindowHint(GLFW_RESIZABLE, 0);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -51,16 +82,16 @@ int Chip8::initDisplay(){
     //make window
     window = glfwCreateWindow(WIDTH*20, HEIGHT*20, "Test", NULL, NULL);
     if (window == NULL) {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        return 1;
+        std::cerr << "Failed to create GLFW window" << std::endl;
+        return;
     }
     glfwMakeContextCurrent(window);
 
 
     //intialize GLAD for OpenGl functions
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)){
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return 1;
+        std::cerr << "Failed to initialize GLAD" << std::endl;
+        return;
     }
 
     //create opengl viewport and adjust it when window is resized
@@ -116,7 +147,7 @@ int Chip8::initDisplay(){
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3*sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    return 0;
+    return;
 }
 
 int Chip8::start(){
@@ -143,13 +174,16 @@ int Chip8::start(){
     glDeleteBuffers(1, &EBO);
 
     glfwTerminate();
-    return 0;
+    return;
 }
+
+
+/*-----------------[Main Functionality]-----------------*/
 
 //get 2 byte instruction at PC location and increment by 2
 unsigned short Chip8::fetch(){
     if (PC > MAX_MEM-2){
-        std::cout << "PC at end of memory; failed to fetch" << std::endl;
+        std::cerr << "PC at end of memory; failed to fetch" << std::endl;
         return 0;
     }
     unsigned short mask = 0xFFFF;
@@ -158,6 +192,39 @@ unsigned short Chip8::fetch(){
     return mask;
 }
 
-int Chip8::decode(unsigned short instruction){
-    return 0;    
+//determine what to do based on instruction
+void Chip8::decode(unsigned short instruction){
+    switch (instruction << 12){
+        case 0x0:
+            switch (instruction & 0xFFF){
+                case 0x0E0:
+                    Chip8::clear();
+                    break;
+
+                case 0x0EE:
+                    Chip8::return_subroutine();
+            }
+            break;
+    }
+    return;    
+}
+
+
+/*-----------------[Opcodes]-----------------*/
+
+void Chip8::clear(){
+    std::memset(screen, 0, WIDTH*HEIGHT*sizeof(unsigned char));
+}
+
+void Chip8::jump(unsigned short addr){
+    PC = addr;
+}
+
+void Chip8::return_subroutine(){
+    PC = Chip8::pop();
+}
+
+void Chip8::start_subroutine(unsigned short addr){
+    Chip8::push(PC);
+    PC = addr; 
 }
