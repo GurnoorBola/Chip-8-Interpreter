@@ -26,10 +26,10 @@ Chip8::Chip8(){
     //copy fonts to memory (0x050 - 0x09F)
     memcpy(&memory[0x50], fonts, sizeof(fonts));
 
-    int length = WIDTH*HEIGHT;
-    for (int i=0; i < length; i++){
-        screen[i] = 255;
-    }
+    //int length = WIDTH*HEIGHT;
+    //for (int i=0; i < length; i++){
+        //screen[i] = 255;
+    //}
 
 };
 
@@ -151,6 +151,11 @@ void Chip8::initDisplay(){
 }
 
 void Chip8::start(){
+    I = 0x50 + (6)*5;
+    Chip8::display(1, 1, 5);
+    I = 0x50 + (7)*5;
+    Chip8::display(7, 1, 5);
+
     while (!glfwWindowShouldClose(window)){
         processInput(window);
 
@@ -160,6 +165,7 @@ void Chip8::start(){
         shader.use();
 
         glBindTexture(GL_TEXTURE_2D, texture);
+
 
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -300,7 +306,7 @@ void Chip8::display(unsigned char x, unsigned char y, unsigned char height){
     y %= HEIGHT;
 
     //loop through rows and cols of the screen and update individual screen pixels
-    for (int row = y; row < row + height; row++){
+    for (int row = y; row < (y + height); row++){
         //stop if off of screen
         if (row >= HEIGHT) { break; }
         
@@ -309,7 +315,7 @@ void Chip8::display(unsigned char x, unsigned char y, unsigned char height){
         unsigned char sprite_row = memory[sprite_index];
         int pixel = 7;
 
-        for (int col = x; col < col + 8; col++){
+        for (int col = x; col < (x + 8); col++){
             //stop if off of screen
             if (col >= WIDTH){ break; }
 
@@ -322,4 +328,7 @@ void Chip8::display(unsigned char x, unsigned char y, unsigned char height){
         }
         sprite_index++;
     }
+
+    //update texture
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, WIDTH, HEIGHT, 0, GL_RED, GL_UNSIGNED_BYTE, screen);
 }
