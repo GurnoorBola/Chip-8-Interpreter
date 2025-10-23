@@ -38,6 +38,10 @@ private:
     void jump(unsigned short addr); //1NNN Jump
     void return_subroutine(); //00EE Return from subroutine
     void start_subroutine(unsigned short addr); //2NNN Start subroutine at NNN
+    void set(unsigned char reg, unsigned char val); //6XNN set register VX to NN
+    void add(unsigned char reg, unsigned char val); //7XNN add NN to register VX
+    void set_index(unsigned short index); //ANNN set index to NNN
+    void display(unsigned char x, unsigned char y, unsigned char height);
 
 
     //opengl window initialization

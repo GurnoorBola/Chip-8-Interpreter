@@ -194,7 +194,7 @@ unsigned short Chip8::fetch(){
 
 //determine what to do based on instruction
 void Chip8::decode(unsigned short instruction){
-    switch (instruction << 12){
+    switch (instruction >> 12){
         case 0x0:
             switch (instruction & 0xFFF){
                 case 0x0E0:
@@ -203,10 +203,59 @@ void Chip8::decode(unsigned short instruction){
 
                 case 0x0EE:
                     Chip8::return_subroutine();
+                    break;
+
+                default:
+                    std::cerr << "Invalid opcode" << std::endl;
             }
             break;
+
+        case 0x1:
+            break;
+
+        case 0x2:
+            break;
+            
+        case 0x3:
+            break;
+
+        case 0x4:
+            break;
+
+        case 0x5:
+            break;
+
+        case 0x6:
+            
+            break;
+
+        case 0x7:
+            break;
+
+        case 0x8:
+            break;
+
+        case 0x9:
+            break;
+            
+        case 0xA:
+            break;
+
+        case 0xB:
+            break;
+
+        case 0xC:
+            break;
+            
+        case 0xD:
+            break;
+
+        case 0xE:
+            break;
+
+        case 0xF:
+            break;
     }
-    return;    
 }
 
 
@@ -227,4 +276,50 @@ void Chip8::return_subroutine(){
 void Chip8::start_subroutine(unsigned short addr){
     Chip8::push(PC);
     PC = addr; 
+}
+
+void Chip8::set(unsigned char reg, unsigned char val){
+    registers[reg] = val;
+}
+
+void Chip8::add(unsigned char reg, unsigned char val) {
+    registers[reg] += val;
+}
+
+void Chip8::set_index(unsigned short index){
+    I = index;
+}
+
+
+//get sprite from memory location pointed at by I and display height bytes of it
+void Chip8::display(unsigned char x, unsigned char y, unsigned char height){
+    //initialize VF register to be 0 and make sure x and y are on screen
+    registers[0xF] = 0;
+    unsigned char sprite_index = I;
+    x %= WIDTH;
+    y %= HEIGHT;
+
+    //loop through rows and cols of the screen and update individual screen pixels
+    for (int row = y; row < row + height; row++){
+        //stop if off of screen
+        if (row >= HEIGHT) { break; }
+        
+        //read from left to right so we start with 7th pixel 0-indexed
+        //we also get the current row of the character
+        unsigned char sprite_row = memory[sprite_index];
+        int pixel = 7;
+
+        for (int col = x; col < col + 8; col++){
+            //stop if off of screen
+            if (col >= WIDTH){ break; }
+
+            unsigned char bit = -((sprite_row >> pixel) & 1);
+            pixel--;
+
+            int screen_index = (row*WIDTH) + col;
+            if (screen[screen_index] & bit) { registers[0xF] = 1; }
+            screen[screen_index] ^= bit;
+        }
+        sprite_index++;
+    }
 }
