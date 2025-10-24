@@ -87,7 +87,6 @@ void Chip8::initDisplay(){
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    //make window
     window = glfwCreateWindow(WIDTH*20, HEIGHT*20, "CHIP-8", NULL, NULL);
     if (window == NULL) {
         std::cerr << "Failed to create GLFW window" << std::endl;
@@ -96,24 +95,20 @@ void Chip8::initDisplay(){
     glfwMakeContextCurrent(window);
 
 
-    //intialize GLAD for OpenGl functions
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)){
         std::cerr << "Failed to initialize GLAD" << std::endl;
         return;
     }
 
-    // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
-    // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init();
 
-    //create opengl viewport and adjust it when window is resized
     glViewport(0, 0, WIDTH*20, HEIGHT*20);
     glfwSetFramebufferSizeCallback(window, Chip8::framebuffer_size_callback);
 
@@ -151,7 +146,6 @@ void Chip8::initDisplay(){
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, WIDTH, HEIGHT, 0, GL_RED, GL_UNSIGNED_BYTE, screen);
 
     //initialize VAO
-    
     glBindVertexArray(VAO);
     
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -179,7 +173,6 @@ void Chip8::initDisplay(){
 void Chip8::emulate_cycle(){
     glfwPollEvents();
 
-    //show demo UI
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
@@ -190,7 +183,6 @@ void Chip8::emulate_cycle(){
 
     glClear(GL_COLOR_BUFFER_BIT);
 
-    //draw object
     shader.use();
 
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -340,7 +332,6 @@ void Chip8::set_index(unsigned short index){
 
 //get sprite from memory location pointed at by I and display height bytes of it
 void Chip8::display(unsigned char x, unsigned char y, unsigned char height){
-    //initialize VF register to be 0 and make sure x and y are on screen
     registers[0xF] = 0;
     unsigned char sprite_index = I;
     x %= WIDTH;
@@ -348,16 +339,12 @@ void Chip8::display(unsigned char x, unsigned char y, unsigned char height){
 
     //loop through rows and cols of the screen and update individual screen pixels
     for (int row = y; row < (y + height); row++){
-        //stop if off of screen
         if (row >= HEIGHT) { break; }
         
-        //read from left to right so we start with 7th pixel 0-indexed
-        //we also get the current row of the character
         unsigned char sprite_row = memory[sprite_index];
         int pixel = 7;
 
         for (int col = x; col < (x + 8); col++){
-            //stop if off of screen
             if (col >= WIDTH){ break; }
 
             unsigned char bit = -((sprite_row >> pixel) & 1);
@@ -370,6 +357,5 @@ void Chip8::display(unsigned char x, unsigned char y, unsigned char height){
         sprite_index++;
     }
 
-    //update texture
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, WIDTH, HEIGHT, 0, GL_RED, GL_UNSIGNED_BYTE, screen);
 }
