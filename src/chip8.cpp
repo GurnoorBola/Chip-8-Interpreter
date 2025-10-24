@@ -1,5 +1,8 @@
 #include <chip8/chip8.h>
 #include <cstring>
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 
 unsigned char fonts[] = {
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -151,9 +154,10 @@ void Chip8::initDisplay(){
 }
 
 void Chip8::start(){
-    I = 0x50 + (6)*5;
+    //small test display 1A
+    Chip8::set_index(0x50 + (1)*5);
     Chip8::display(1, 1, 5);
-    I = 0x50 + (7)*5;
+    Chip8::set_index(0x50 + (0xA)*5);
     Chip8::display(7, 1, 5);
 
     while (!glfwWindowShouldClose(window)){

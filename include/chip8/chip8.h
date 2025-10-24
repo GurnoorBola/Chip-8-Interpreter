@@ -1,8 +1,8 @@
 #pragma once
 #include <iostream>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <Shaders/shader.h>
+#include <glad.h>
+#include <glfw3.h>
+#include <shaders/shader.h>
 #include <cmath>
 
 #define MAX_MEM 4096
@@ -41,7 +41,7 @@ private:
     void set(unsigned char reg, unsigned char val); //6XNN set register VX to NN
     void add(unsigned char reg, unsigned char val); //7XNN add NN to register VX
     void set_index(unsigned short index); //ANNN set index to NNN
-    void display(unsigned char x, unsigned char y, unsigned char height);
+    void display(unsigned char x, unsigned char y, unsigned char height); //DXYH draw character at x, y
 
 
     //opengl window initialization
