@@ -69,9 +69,14 @@ void Chip8::framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, WIDTH*20, HEIGHT*20);
 }
 
-void Chip8::processInput(GLFWwindow *window){
+void Chip8::processInput(){
+    if (window == NULL) {
+        std::cerr << "GLFW window not intialized" << std::endl;
+        return;
+    }
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
-        glfwSetWindowShouldClose(window, true);
+        //glfwSetWindowShouldClose(window, true);
+        stop = true;
     }
 }
 
@@ -83,7 +88,7 @@ void Chip8::initDisplay(){
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     //make window
-    window = glfwCreateWindow(WIDTH*20, HEIGHT*20, "Test", NULL, NULL);
+    window = glfwCreateWindow(WIDTH*20, HEIGHT*20, "CHIP-8", NULL, NULL);
     if (window == NULL) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         return;
@@ -96,6 +101,17 @@ void Chip8::initDisplay(){
         std::cerr << "Failed to initialize GLAD" << std::endl;
         return;
     }
+
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init();
 
     //create opengl viewport and adjust it when window is resized
     glViewport(0, 0, WIDTH*20, HEIGHT*20);
@@ -150,41 +166,58 @@ void Chip8::initDisplay(){
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3*sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    return;
-}
 
-void Chip8::start(){
     //small test display 1A
     Chip8::set_index(0x50 + (1)*5);
     Chip8::display(1, 1, 5);
     Chip8::set_index(0x50 + (0xA)*5);
     Chip8::display(7, 1, 5);
 
-    while (!glfwWindowShouldClose(window)){
-        processInput(window);
+    return;
+}
 
-        glClear(GL_COLOR_BUFFER_BIT);
+void Chip8::emulate_cycle(){
+    glfwPollEvents();
 
-        //draw object
-        shader.use();
+    //show demo UI
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    ImGui::ShowDemoWindow();
 
-        glBindTexture(GL_TEXTURE_2D, texture);
+    //unsigned short instruction = Chip8::fetch();
+    //Chip8::decode(instruction);
+
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    //draw object
+    shader.use();
+
+    glBindTexture(GL_TEXTURE_2D, texture);
 
 
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-        glBindVertexArray(0);
+    glBindVertexArray(0);
 
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
+    glfwSwapBuffers(window);
+
+    return;
+}
+
+void Chip8::terminate(){
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &EBO);
 
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
     glfwTerminate();
-    return;
 }
 
 
@@ -271,18 +304,22 @@ void Chip8::decode(unsigned short instruction){
 
 /*-----------------[Opcodes]-----------------*/
 
+//00E0
 void Chip8::clear(){
     std::memset(screen, 0, WIDTH*HEIGHT*sizeof(unsigned char));
 }
 
+//1NNN
 void Chip8::jump(unsigned short addr){
     PC = addr;
 }
 
+//00EE
 void Chip8::return_subroutine(){
     PC = Chip8::pop();
 }
 
+//
 void Chip8::start_subroutine(unsigned short addr){
     Chip8::push(PC);
     PC = addr; 

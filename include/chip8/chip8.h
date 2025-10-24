@@ -45,7 +45,7 @@ private:
 
 
     //opengl window initialization
-    GLFWwindow* window;
+    GLFWwindow* window = NULL;
     Shader shader;
    
     unsigned int VAO;
@@ -55,12 +55,21 @@ private:
     unsigned int texture;
     
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-    void processInput(GLFWwindow *window);
 
 public:
     Chip8();
+
+    //each bit maps to keypress
+    unsigned short keys;
+
+    //flag to stop emulation
+    bool stop;
+    
+    void processInput();
     
     void initDisplay();
 
-    void start();
+    void emulate_cycle();
+
+    void terminate();
 };
