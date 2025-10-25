@@ -53,7 +53,7 @@ private:
     void set_reg_shift_right(unsigned char x_reg, unsigned char y_reg); //8XY6 set VX to value of VY, shift VX by a bit to right and set VF to bit shifted out
     void set_reg_sub(unsigned char x_reg, unsigned char y_reg); //8XY7 set VX to value of VX - VY and set VF to 0 if underflow, 1 else 
     void set_reg_shift_left(unsigned char x_reg, unsigned char y_reg); //8XYE set VX to value of VY, shift VX by a bit to left and set VF to bit shifted out
-    void skip_reg_equals(); //9XY0 skip if VX != VY
+    void skip_reg_not_equals(); //9XY0 skip if VX != VY
     void set_index(unsigned short index); //ANNN set index to NNN
     void jump_plus(unsigned short addr); //BNNN jump to NNN + V0
     void set_reg_rand(unsigned char x_reg); //CXNN set VX to random byte (bitwise AND) NN
