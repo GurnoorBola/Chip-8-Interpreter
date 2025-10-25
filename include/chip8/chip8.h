@@ -23,6 +23,7 @@ private:
     unsigned char sound;
     unsigned char registers[16] = {};
 
+
     //stack operations
     void push(unsigned short x);
     unsigned short pop();
@@ -67,7 +68,10 @@ public:
     
     void processInput();
     
-    void initDisplay();
+    int initDisplay();
+
+    //IO functionality
+    int loadProgram(std::string filename);
 
     void emulate_cycle();
 

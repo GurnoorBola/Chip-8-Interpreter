@@ -1,5 +1,6 @@
 #include <chip8/chip8.h>
 #include <cstring>
+#include <fstream>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
@@ -62,9 +63,34 @@ unsigned short Chip8::peek(){
     return stack[top];
 }
 
+/*-----------------[IO Functions]-----------------*/
+//load program into memory starting from 0x200 (512)
+int Chip8::loadProgram(std::string filename){
+    std::ifstream program("games/" + filename, std::ios::binary);
+    if (!program.is_open()){
+        std::cerr << "Program failed to open" << std::endl;
+        return 1;
+    }
+    program.seekg(0, std::ios::end);
+    std::streampos fileSize = program.tellg();
+    program.seekg(0, std::ios::beg);
+
+    program.read(reinterpret_cast<char*>(memory + 0x200), fileSize);
+    for (int i=512; i < 512 + (int)fileSize; i++){
+        printf("%02x ", memory[i]);
+        fflush(stdout);
+    }
+    printf("\n");
+    fflush(stdout);
+
+    PC = 0x200;
+    return 0;
+}
+
 
 
 /*-----------------[Graphics]-----------------*/
+
 void Chip8::framebuffer_size_callback(GLFWwindow* window, int width, int height){
     glViewport(0, 0, WIDTH*20, HEIGHT*20);
 }
@@ -80,7 +106,7 @@ void Chip8::processInput(){
     }
 }
 
-void Chip8::initDisplay(){
+int Chip8::initDisplay(){
     glfwInit();
     glfwWindowHint(GLFW_RESIZABLE, 0);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -90,14 +116,14 @@ void Chip8::initDisplay(){
     window = glfwCreateWindow(WIDTH*20, HEIGHT*20, "CHIP-8", NULL, NULL);
     if (window == NULL) {
         std::cerr << "Failed to create GLFW window" << std::endl;
-        return;
+        return 1;
     }
     glfwMakeContextCurrent(window);
 
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)){
         std::cerr << "Failed to initialize GLAD" << std::endl;
-        return;
+        return 1;
     }
 
     IMGUI_CHECKVERSION();
@@ -162,30 +188,30 @@ void Chip8::initDisplay(){
 
 
     //small test display 1A
-    Chip8::set_index(0x50 + (1)*5);
-    Chip8::display(1, 1, 5);
-    Chip8::set_index(0x50 + (0xA)*5);
-    Chip8::display(7, 1, 5);
+    //Chip8::set_index(0x50 + (1)*5);
+    //Chip8::display(1, 1, 5);
+    //Chip8::set_index(0x50 + (0xA)*5);
+    //Chip8::display(7, 1, 5);
 
-    return;
+    return 0;
 }
 
 void Chip8::emulate_cycle(){
     glfwPollEvents();
 
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-    ImGui::ShowDemoWindow();
+    //ImGui_ImplOpenGL3_NewFrame();
+    //ImGui_ImplGlfw_NewFrame();
+    //ImGui::NewFrame();
+    //ImGui::ShowDemoWindow();
 
-    //unsigned short instruction = Chip8::fetch();
-    //Chip8::decode(instruction);
+    unsigned short instruction = Chip8::fetch();
+    Chip8::decode(instruction);
 
     glClear(GL_COLOR_BUFFER_BIT);
 
     shader.use();
 
-    glBindTexture(GL_TEXTURE_2D, texture);
+    //glBindTexture(GL_TEXTURE_2D, texture);
 
 
     glBindVertexArray(VAO);
@@ -193,8 +219,8 @@ void Chip8::emulate_cycle(){
 
     glBindVertexArray(0);
 
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    //ImGui::Render();
+    //ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     glfwSwapBuffers(window);
 
@@ -205,9 +231,9 @@ void Chip8::terminate(){
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &EBO);
 
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
+    //ImGui_ImplOpenGL3_Shutdown();
+    //ImGui_ImplGlfw_Shutdown();
+    //ImGui::DestroyContext();
 
     glfwTerminate();
 }
@@ -230,7 +256,7 @@ unsigned short Chip8::fetch(){
 //determine what to do based on instruction
 void Chip8::decode(unsigned short instruction){
     switch (instruction >> 12){
-        case 0x0:
+        case 0x0: {
             switch (instruction & 0xFFF){
                 case 0x0E0:
                     Chip8::clear();
@@ -244,12 +270,19 @@ void Chip8::decode(unsigned short instruction){
                     std::cerr << "Invalid opcode" << std::endl;
             }
             break;
+        }
 
-        case 0x1:
+        case 0x1: {
+            unsigned short addr = instruction & 0xFFF;
+            Chip8::jump(addr);
             break;
+        }
 
-        case 0x2:
+        case 0x2: {
+            unsigned short addr = instruction & 0xFFF;
+            Chip8::start_subroutine(addr);
             break;
+        }
             
         case 0x3:
             break;
@@ -260,12 +293,19 @@ void Chip8::decode(unsigned short instruction){
         case 0x5:
             break;
 
-        case 0x6:
-            
+        case 0x6: {
+            unsigned char reg = (instruction >> 8) & 0xF;
+            unsigned char val = instruction & 0xFF; 
+            Chip8::set(reg, val);
             break;
+        }
 
-        case 0x7:
+        case 0x7: {
+            unsigned char reg = (instruction >> 8) & 0xF;
+            unsigned char val = instruction & 0xFF; 
+            Chip8::add(reg, val);
             break;
+        }
 
         case 0x8:
             break;
@@ -273,8 +313,11 @@ void Chip8::decode(unsigned short instruction){
         case 0x9:
             break;
             
-        case 0xA:
+        case 0xA: {
+            unsigned short index = instruction & 0xFFF;
+            Chip8::set_index(index);
             break;
+        }
 
         case 0xB:
             break;
@@ -282,8 +325,13 @@ void Chip8::decode(unsigned short instruction){
         case 0xC:
             break;
             
-        case 0xD:
+        case 0xD: {
+            unsigned char X = (instruction >> 8) & 0xF;
+            unsigned char Y = (instruction >> 4) & 0xF;
+            unsigned char height = instruction & 0xF;
+            Chip8::display(registers[X], registers[Y], height);
             break;
+        }
 
         case 0xE:
             break;
@@ -296,44 +344,47 @@ void Chip8::decode(unsigned short instruction){
 
 /*-----------------[Opcodes]-----------------*/
 
-//00E0
+//(00E0) clear screen
 void Chip8::clear(){
     std::memset(screen, 0, WIDTH*HEIGHT*sizeof(unsigned char));
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, WIDTH, HEIGHT, 0, GL_RED, GL_UNSIGNED_BYTE, screen);
 }
 
-//1NNN
+//(1NNN) jump to adress NNN
 void Chip8::jump(unsigned short addr){
     PC = addr;
 }
 
-//00EE
+//(00EE) return from subroutine
 void Chip8::return_subroutine(){
     PC = Chip8::pop();
 }
 
-//
+//(2NNN) start subroutine at NNN
 void Chip8::start_subroutine(unsigned short addr){
     Chip8::push(PC);
     PC = addr; 
 }
 
+//(6XNN) set VX to NN
 void Chip8::set(unsigned char reg, unsigned char val){
     registers[reg] = val;
 }
 
+//(7XNN) add NN to VX
 void Chip8::add(unsigned char reg, unsigned char val) {
     registers[reg] += val;
 }
 
+//(ANNN) set index to NNN
 void Chip8::set_index(unsigned short index){
     I = index;
 }
 
-
-//get sprite from memory location pointed at by I and display height bytes of it
+//(DXYN) draw sprite pointed at by I at (V[X], V[Y]) with height N 
 void Chip8::display(unsigned char x, unsigned char y, unsigned char height){
     registers[0xF] = 0;
-    unsigned char sprite_index = I;
+    unsigned short sprite_index = I;
     x %= WIDTH;
     y %= HEIGHT;
 

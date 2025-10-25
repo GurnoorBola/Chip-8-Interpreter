@@ -7,7 +7,15 @@
 
 int main() {
     Chip8 chip8 = Chip8();
-    chip8.initDisplay();
+    if (chip8.initDisplay()){
+        std::cout << "Error intializing display..." << std::endl;
+        return 1;
+    }
+    
+    while (chip8.loadProgram("IBM Logo.ch8")){
+        std::cout << "Error loading file. Please make sure the file is in the \"games\" directory." << std::endl;
+        return 1;
+    }
 
     while (1) {
         chip8.processInput();
