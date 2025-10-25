@@ -13,7 +13,7 @@ int main() {
     }
     
     while (chip8.loadProgram("IBM Logo.ch8")){
-        std::cout << "Error loading file. Please make sure the file is in the \"games\" directory." << std::endl;
+        std::cout << "Error loading file. Please make sure the file is in the \"games/\" directory." << std::endl;
         return 1;
     }
 

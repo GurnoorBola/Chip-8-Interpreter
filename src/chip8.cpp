@@ -347,7 +347,7 @@ void Chip8::decode(unsigned short instruction){
 //(00E0) clear screen
 void Chip8::clear(){
     std::memset(screen, 0, WIDTH*HEIGHT*sizeof(unsigned char));
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, WIDTH, HEIGHT, 0, GL_RED, GL_UNSIGNED_BYTE, screen);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, WIDTH, HEIGHT, GL_RED, GL_UNSIGNED_BYTE, screen);
 }
 
 //(1NNN) jump to adress NNN
@@ -408,5 +408,5 @@ void Chip8::display(unsigned char x, unsigned char y, unsigned char height){
         sprite_index++;
     }
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, WIDTH, HEIGHT, 0, GL_RED, GL_UNSIGNED_BYTE, screen);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, WIDTH, HEIGHT, GL_RED, GL_UNSIGNED_BYTE, screen);
 }
